@@ -21,14 +21,10 @@ module GeneratorLabs
     # @raise [Error] if credentials are invalid
     def initialize(account_sid, auth_token)
       # Validate account SID format
-      unless account_sid.match?(/^[A-Z]{2}[0-9a-fA-F]{32}$/)
-        raise Error, "Invalid account SID format: #{account_sid}"
-      end
+      raise Error, "Invalid account SID format: #{account_sid}" unless account_sid.match?(/^[A-Z]{2}[0-9a-fA-F]{32}$/)
 
       # Validate auth token format
-      unless auth_token.match?(/^[0-9a-fA-F]{64}$/)
-        raise Error, 'Invalid auth token format'
-      end
+      raise Error, 'Invalid auth token format' unless auth_token.match?(/^[0-9a-fA-F]{64}$/)
 
       @account_sid = account_sid
       @auth_token = auth_token

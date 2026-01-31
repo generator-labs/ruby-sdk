@@ -2,31 +2,32 @@
 
 require 'spec_helper'
 
-RSpec.describe GeneratorLabs::Client do
+RSpec.describe GeneratorLabs::Client do # rubocop:disable Metrics/BlockLength
+  let(:valid_sid) { 'AC0123456789abcdef0123456789abcdef' }
+  let(:valid_token) { '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }
+
   describe '#initialize' do
     it 'creates a client with valid credentials' do
-      client = described_class.new('AC0123456789abcdef0123456789abcdef', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
+      client = described_class.new(valid_sid, valid_token)
       expect(client).to be_a(GeneratorLabs::Client)
-      expect(client.account_sid).to eq('AC0123456789abcdef0123456789abcdef')
+      expect(client.account_sid).to eq(valid_sid)
     end
 
     it 'raises an error with invalid account SID format' do
       expect do
-        described_class.new('invalid', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
+        described_class.new('invalid', valid_token)
       end.to raise_error(GeneratorLabs::Error, /Invalid account SID format/)
     end
 
     it 'raises an error with invalid auth token format' do
       expect do
-        described_class.new('AC0123456789abcdef0123456789abcdef', 'invalid')
+        described_class.new(valid_sid, 'invalid')
       end.to raise_error(GeneratorLabs::Error, /Invalid auth token format/)
     end
   end
 
   describe 'namespaces' do
-    let(:client) do
-      described_class.new('AC0123456789abcdef0123456789abcdef', '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef')
-    end
+    let(:client) { described_class.new(valid_sid, valid_token) }
 
     it 'provides access to RBL namespace' do
       expect(client.rbl).to be_a(GeneratorLabs::RBL)

@@ -1,0 +1,26 @@
+# RuboCop configuration for Generator Labs Ruby SDK
+
+AllCops:
+  TargetRubyVersion: 3.0
+  NewCops: enable
+  Exclude:
+    - 'vendor/**/*'
+
+# Allow slightly longer methods for request handler which needs to handle
+# different HTTP methods and error conditions
+Metrics/MethodLength:
+  Max: 30
+
+Metrics/AbcSize:
+  Max: 35
+
+Metrics/CyclomaticComplexity:
+  Max: 15
+
+Metrics/PerceivedComplexity:
+  Max: 15
+
+# Allow slightly longer blocks for specs
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'

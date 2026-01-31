@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'lib/generatorlabs/version'
 
 Gem::Specification.new do |spec|
@@ -7,7 +9,8 @@ Gem::Specification.new do |spec|
   spec.email         = ['support@generatorlabs.com']
 
   spec.summary       = 'Official Ruby SDK for the Generator Labs API'
-  spec.description   = 'A Ruby wrapper for the Generator Labs API v4.0, providing RBL monitoring, contact management, and more'
+  spec.description   = 'A Ruby wrapper for the Generator Labs API v4.0, ' \
+                       'providing RBL monitoring, contact management, and more'
   spec.homepage      = 'https://generatorlabs.com'
   spec.license       = 'MIT'
   spec.required_ruby_version = '>= 3.0.0'
@@ -24,6 +27,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'faraday-retry', '~> 2.2'
 
   spec.add_development_dependency 'rspec', '~> 3.12'
-  spec.add_development_dependency 'webmock', '~> 3.18'
   spec.add_development_dependency 'rubocop', '~> 1.50'
+  spec.add_development_dependency 'webmock', '~> 3.18'
 end
