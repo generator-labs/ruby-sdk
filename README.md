@@ -194,7 +194,7 @@ Certificate monitoring allows you to monitor SSL/TLS certificates for expiration
 errors = client.cert.errors.get
 
 # Get a specific error
-error = client.cert.errors.get('CE1234567890abcdef')
+error = client.cert.errors.get('CE5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a')
 ```
 
 #### Monitors
@@ -204,7 +204,7 @@ error = client.cert.errors.get('CE1234567890abcdef')
 monitors = client.cert.monitors.get
 
 # Get a specific monitor
-monitor = client.cert.monitors.get('CM1234567890abcdef')
+monitor = client.cert.monitors.get('CM62944aeeee2b46d7a28221164f38976a')
 
 # Create a certificate monitor
 monitor = client.cert.monitors.create(
@@ -212,21 +212,21 @@ monitor = client.cert.monitors.create(
   hostname: 'example.com',
   port: 443,
   protocol: 'https',
-  cert_profile: 'CP1234567890abcdef',
-  contact_group: 'CG1234567890abcdef'
+  cert_profile: 'CP79b597e61a984a35b5eb7dcdbc3de53c',
+  contact_group: 'CG4f3e2d1c0b9a8776655443322110fed'
 )
 
 # Update a monitor
-monitor = client.cert.monitors.update('CM1234567890abcdef', name: 'Updated Server Name')
+monitor = client.cert.monitors.update('CM62944aeeee2b46d7a28221164f38976a', name: 'Updated Server Name')
 
 # Delete a monitor
-result = client.cert.monitors.delete('CM1234567890abcdef')
+result = client.cert.monitors.delete('CM62944aeeee2b46d7a28221164f38976a')
 
 # Pause monitoring
-result = client.cert.monitors.pause('CM1234567890abcdef')
+result = client.cert.monitors.pause('CM62944aeeee2b46d7a28221164f38976a')
 
 # Resume monitoring
-result = client.cert.monitors.resume('CM1234567890abcdef')
+result = client.cert.monitors.resume('CM62944aeeee2b46d7a28221164f38976a')
 ```
 
 #### Profiles
@@ -236,7 +236,7 @@ result = client.cert.monitors.resume('CM1234567890abcdef')
 profiles = client.cert.profiles.get
 
 # Get a specific profile
-profile = client.cert.profiles.get('CP1234567890abcdef')
+profile = client.cert.profiles.get('CP79b597e61a984a35b5eb7dcdbc3de53c')
 
 # Create a profile
 profile = client.cert.profiles.create(
@@ -246,10 +246,10 @@ profile = client.cert.profiles.create(
 )
 
 # Update a profile
-profile = client.cert.profiles.update('CP1234567890abcdef', expiration_warning_days: 45)
+profile = client.cert.profiles.update('CP79b597e61a984a35b5eb7dcdbc3de53c', expiration_warning_days: 45)
 
 # Delete a profile
-result = client.cert.profiles.delete('CP1234567890abcdef')
+result = client.cert.profiles.delete('CP79b597e61a984a35b5eb7dcdbc3de53c')
 ```
 
 ### Contact Management

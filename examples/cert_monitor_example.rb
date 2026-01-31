@@ -81,7 +81,7 @@ begin
     port: 443,
     protocol: 'https',
     cert_profile: profile_id,
-    contact_group: 'CG37106c6baa1ec90a2b3f5c8ec54afe9d' # Use your contact group ID
+    contact_group: 'CG4f3e2d1c0b9a8776655443322110fed' # Use your contact group ID
   )
   puts "Created HTTPS monitor ID: #{https_monitor['monitor']['id']}"
   https_monitor_id = https_monitor['monitor']['id']
@@ -94,7 +94,7 @@ begin
     port: 465,
     protocol: 'smtps',
     cert_profile: profile_id,
-    contact_group: 'CG37106c6baa1ec90a2b3f5c8ec54afe9d'
+    contact_group: 'CG4f3e2d1c0b9a8776655443322110fed'
   )
   puts "Created SMTPS monitor ID: #{smtps_monitor['monitor']['id']}"
   smtps_monitor_id = smtps_monitor['monitor']['id']
