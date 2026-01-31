@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe GeneratorLabs::Client do # rubocop:disable Metrics/BlockLength
+RSpec.describe GeneratorLabs::Client do
   let(:valid_sid) { 'AC0123456789abcdef0123456789abcdef' }
   let(:valid_token) { '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef' }
 

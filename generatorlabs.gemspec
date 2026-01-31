@@ -19,14 +19,11 @@ Gem::Specification.new do |spec|
   spec.metadata['source_code_uri'] = 'https://github.com/generator-labs/ruby-sdk'
   spec.metadata['bug_tracker_uri'] = 'https://github.com/generator-labs/ruby-sdk/issues'
   spec.metadata['documentation_uri'] = 'https://docs.generatorlabs.com/api/v4/'
+  spec.metadata['rubygems_mfa_required'] = 'true'
 
   spec.files = Dir['lib/**/*', 'LICENSE', 'README.md']
   spec.require_paths = ['lib']
 
   spec.add_dependency 'faraday', '~> 2.7'
   spec.add_dependency 'faraday-retry', '~> 2.2'
-
-  spec.add_development_dependency 'rspec', '~> 3.12'
-  spec.add_development_dependency 'rubocop', '~> 1.50'
-  spec.add_development_dependency 'webmock', '~> 3.18'
 end
