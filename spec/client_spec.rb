@@ -36,6 +36,22 @@ RSpec.describe GeneratorLabs::Client do
     it 'provides access to Contact namespace' do
       expect(client.contact).to be_a(GeneratorLabs::Contact)
     end
+
+    it 'provides access to Cert namespace' do
+      expect(client.cert).to be_a(GeneratorLabs::Cert)
+    end
+
+    it 'provides access to Cert errors endpoint' do
+      expect(client.cert.errors).not_to be_nil
+    end
+
+    it 'provides access to Cert monitors endpoint' do
+      expect(client.cert.monitors).not_to be_nil
+    end
+
+    it 'provides access to Cert profiles endpoint' do
+      expect(client.cert.profiles).not_to be_nil
+    end
   end
 
   describe 'version' do

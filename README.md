@@ -183,6 +183,75 @@ result = client.rbl.check('8.8.8.8')
 listings = client.rbl.listings
 ```
 
+### Certificate Monitoring
+
+Certificate monitoring allows you to monitor SSL/TLS certificates for expiration, validity, and configuration issues across HTTPS, SMTPS, IMAPS, and other TLS-enabled services.
+
+#### Errors
+
+```ruby
+# Get all certificate errors
+errors = client.cert.errors.get
+
+# Get a specific error
+error = client.cert.errors.get('CE1234567890abcdef')
+```
+
+#### Monitors
+
+```ruby
+# Get all certificate monitors
+monitors = client.cert.monitors.get
+
+# Get a specific monitor
+monitor = client.cert.monitors.get('CM1234567890abcdef')
+
+# Create a certificate monitor
+monitor = client.cert.monitors.create(
+  name: 'Production Web Server',
+  hostname: 'example.com',
+  port: 443,
+  protocol: 'https',
+  cert_profile: 'CP1234567890abcdef',
+  contact_group: 'CG1234567890abcdef'
+)
+
+# Update a monitor
+monitor = client.cert.monitors.update('CM1234567890abcdef', name: 'Updated Server Name')
+
+# Delete a monitor
+result = client.cert.monitors.delete('CM1234567890abcdef')
+
+# Pause monitoring
+result = client.cert.monitors.pause('CM1234567890abcdef')
+
+# Resume monitoring
+result = client.cert.monitors.resume('CM1234567890abcdef')
+```
+
+#### Profiles
+
+```ruby
+# Get all certificate profiles
+profiles = client.cert.profiles.get
+
+# Get a specific profile
+profile = client.cert.profiles.get('CP1234567890abcdef')
+
+# Create a profile
+profile = client.cert.profiles.create(
+  name: 'Standard Certificate Profile',
+  expiration_warning_days: 30,
+  expiration_critical_days: 7
+)
+
+# Update a profile
+profile = client.cert.profiles.update('CP1234567890abcdef', expiration_warning_days: 45)
+
+# Delete a profile
+result = client.cert.profiles.delete('CP1234567890abcdef')
+```
+
 ### Contact Management
 
 #### Contacts
