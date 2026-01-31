@@ -15,6 +15,7 @@ require_relative 'generatorlabs/client'
 require_relative 'generatorlabs/request_handler'
 require_relative 'generatorlabs/rbl'
 require_relative 'generatorlabs/contact'
+require_relative 'generatorlabs/cert'
 
 # Generator Labs API SDK
 module GeneratorLabs

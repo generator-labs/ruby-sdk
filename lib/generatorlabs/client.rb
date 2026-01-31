@@ -46,5 +46,12 @@ module GeneratorLabs
     def contact
       @contact ||= Contact.new(@handler)
     end
+
+    # Get the Certificate monitoring API namespace
+    #
+    # @return [Cert] Cert namespace with endpoints for errors, monitors, and profiles
+    def cert
+      @cert ||= Cert.new(@handler)
+    end
   end
 end
