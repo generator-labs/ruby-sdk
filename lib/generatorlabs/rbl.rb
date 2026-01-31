@@ -55,13 +55,40 @@ module GeneratorLabs
     end
 
     # Get hosts (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Array] Optional ID(s) to retrieve
+    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
     # @return [Hash] Host data
     def get(*ids)
       return @handler.get('rbl/hosts') if ids.empty?
+
+      # Check if first argument is a hash (parameters)
+      return @handler.get('rbl/hosts', ids.first) if ids.first.is_a?(Hash)
+
       return @handler.get("rbl/hosts/#{ids.first}") if ids.length == 1
 
       @handler.get('rbl/hosts', { ids: ids.join(',') })
+    end
+
+    # Get all hosts with automatic pagination
+    # @param params [Hash] Optional parameters (e.g., page_size)
+    # @return [Array] All hosts across all pages
+    def get_all(params = {})
+      all_items = []
+      page = 1
+      params = params.dup
+
+      loop do
+        params[:page] = page
+        response = get(params)
+        hosts = response['hosts'] || []
+
+        all_items.concat(hosts)
+
+        break unless response['has_more'] && !hosts.empty?
+
+        page += 1
+      end
+
+      all_items
     end
 
     # Create a new monitored host
@@ -94,13 +121,40 @@ module GeneratorLabs
     end
 
     # Get profiles (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Array] Optional ID(s) to retrieve
+    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
     # @return [Hash] Profile data
     def get(*ids)
       return @handler.get('rbl/profiles') if ids.empty?
+
+      # Check if first argument is a hash (parameters)
+      return @handler.get('rbl/profiles', ids.first) if ids.first.is_a?(Hash)
+
       return @handler.get("rbl/profiles/#{ids.first}") if ids.length == 1
 
       @handler.get('rbl/profiles', { ids: ids.join(',') })
+    end
+
+    # Get all profiles with automatic pagination
+    # @param params [Hash] Optional parameters (e.g., page_size)
+    # @return [Array] All profiles across all pages
+    def get_all(params = {})
+      all_items = []
+      page = 1
+      params = params.dup
+
+      loop do
+        params[:page] = page
+        response = get(params)
+        profiles = response['profiles'] || []
+
+        all_items.concat(profiles)
+
+        break unless response['has_more'] && !profiles.empty?
+
+        page += 1
+      end
+
+      all_items
     end
 
     # Create a new monitoring profile
@@ -133,13 +187,40 @@ module GeneratorLabs
     end
 
     # Get sources (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Array] Optional ID(s) to retrieve
+    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
     # @return [Hash] Source data
     def get(*ids)
       return @handler.get('rbl/sources') if ids.empty?
+
+      # Check if first argument is a hash (parameters)
+      return @handler.get('rbl/sources', ids.first) if ids.first.is_a?(Hash)
+
       return @handler.get("rbl/sources/#{ids.first}") if ids.length == 1
 
       @handler.get('rbl/sources', { ids: ids.join(',') })
+    end
+
+    # Get all sources with automatic pagination
+    # @param params [Hash] Optional parameters (e.g., page_size)
+    # @return [Array] All sources across all pages
+    def get_all(params = {})
+      all_items = []
+      page = 1
+      params = params.dup
+
+      loop do
+        params[:page] = page
+        response = get(params)
+        sources = response['sources'] || []
+
+        all_items.concat(sources)
+
+        break unless response['has_more'] && !sources.empty?
+
+        page += 1
+      end
+
+      all_items
     end
 
     # Create a new RBL source

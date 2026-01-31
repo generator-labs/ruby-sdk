@@ -10,6 +10,7 @@
 #
 
 require_relative 'generatorlabs/version'
+require_relative 'generatorlabs/config'
 require_relative 'generatorlabs/client'
 require_relative 'generatorlabs/request_handler'
 require_relative 'generatorlabs/rbl'

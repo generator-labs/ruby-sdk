@@ -12,14 +12,15 @@
 module GeneratorLabs
   # Main API client for Generator Labs
   class Client
-    attr_reader :account_sid, :auth_token
+    attr_reader :account_sid, :auth_token, :config
 
     # Initialize a new Generator Labs client
     #
     # @param account_sid [String] Your Generator Labs account SID
     # @param auth_token [String] Your Generator Labs auth token
+    # @param config [Config, nil] Optional configuration object
     # @raise [Error] if credentials are invalid
-    def initialize(account_sid, auth_token)
+    def initialize(account_sid, auth_token, config = nil)
       # Validate account SID format
       raise Error, "Invalid account SID format: #{account_sid}" unless account_sid.match?(/^[A-Z]{2}[0-9a-fA-F]{32}$/)
 
@@ -28,7 +29,8 @@ module GeneratorLabs
 
       @account_sid = account_sid
       @auth_token = auth_token
-      @handler = RequestHandler.new(account_sid, auth_token, 'https://api.generatorlabs.com/4.0/')
+      @config = config || Config.default
+      @handler = RequestHandler.new(account_sid, auth_token, @config)
     end
 
     # Get the RBL monitoring API namespace

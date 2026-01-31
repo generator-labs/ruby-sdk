@@ -36,13 +36,40 @@ module GeneratorLabs
     end
 
     # Get contacts (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Array] Optional ID(s) to retrieve
+    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
     # @return [Hash] Contact data
     def get(*ids)
       return @handler.get('contact/contacts') if ids.empty?
+
+      # Check if first argument is a hash (parameters)
+      return @handler.get('contact/contacts', ids.first) if ids.first.is_a?(Hash)
+
       return @handler.get("contact/contacts/#{ids.first}") if ids.length == 1
 
       @handler.get('contact/contacts', { ids: ids.join(',') })
+    end
+
+    # Get all contacts with automatic pagination
+    # @param params [Hash] Optional parameters (e.g., page_size)
+    # @return [Array] All contacts across all pages
+    def get_all(params = {})
+      all_items = []
+      page = 1
+      params = params.dup
+
+      loop do
+        params[:page] = page
+        response = get(params)
+        contacts = response['contacts'] || []
+
+        all_items.concat(contacts)
+
+        break unless response['has_more'] && !contacts.empty?
+
+        page += 1
+      end
+
+      all_items
     end
 
     # Create a new contact
@@ -75,13 +102,40 @@ module GeneratorLabs
     end
 
     # Get groups (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Array] Optional ID(s) to retrieve
+    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
     # @return [Hash] Group data
     def get(*ids)
       return @handler.get('contact/groups') if ids.empty?
+
+      # Check if first argument is a hash (parameters)
+      return @handler.get('contact/groups', ids.first) if ids.first.is_a?(Hash)
+
       return @handler.get("contact/groups/#{ids.first}") if ids.length == 1
 
       @handler.get('contact/groups', { ids: ids.join(',') })
+    end
+
+    # Get all groups with automatic pagination
+    # @param params [Hash] Optional parameters (e.g., page_size)
+    # @return [Array] All groups across all pages
+    def get_all(params = {})
+      all_items = []
+      page = 1
+      params = params.dup
+
+      loop do
+        params[:page] = page
+        response = get(params)
+        groups = response['groups'] || []
+
+        all_items.concat(groups)
+
+        break unless response['has_more'] && !groups.empty?
+
+        page += 1
+      end
+
+      all_items
     end
 
     # Create a new contact group

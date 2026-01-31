@@ -2,6 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/generatorlabs.svg)](https://badge.fury.io/rb/generatorlabs)
 [![Tests](https://github.com/generator-labs/ruby-sdk/workflows/Tests/badge.svg)](https://github.com/generator-labs/ruby-sdk/actions)
+[![CodeQL](https://github.com/generator-labs/ruby-sdk/workflows/CodeQL/badge.svg)](https://github.com/generator-labs/ruby-sdk/actions?query=workflow%3ACodeQL)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Official Ruby SDK for the [Generator Labs API](https://generatorlabs.com). This library provides a simple and intuitive interface for interacting with the Generator Labs v4.0 API, including RBL monitoring, contact management, and more.
@@ -9,10 +10,13 @@ Official Ruby SDK for the [Generator Labs API](https://generatorlabs.com). This 
 ## Features
 
 - Full support for Generator Labs API v4.0
+- Configurable timeouts, retries, and backoff strategies
 - Automatic retry logic with exponential backoff
+- Automatic pagination for large result sets
 - Connection pooling and timeout management
 - Clean, Ruby-idiomatic API
 - Comprehensive error handling
+- Security scanning with CodeQL and Dependabot
 - Ruby 3.0+ support
 
 ## Installation
@@ -40,10 +44,24 @@ gem install generatorlabs
 ```ruby
 require 'generatorlabs'
 
-# Initialize the client
+# Initialize the client with default configuration
 client = GeneratorLabs::Client.new(
   'YOUR_ACCOUNT_SID',
   'YOUR_AUTH_TOKEN'
+)
+
+# Or with custom configuration
+config = GeneratorLabs::Config.new(
+  timeout: 45,
+  connect_timeout: 10,
+  max_retries: 5,
+  retry_backoff: 2.0,
+  base_url: 'https://api.generatorlabs.com/4.0/'
+)
+client = GeneratorLabs::Client.new(
+  'YOUR_ACCOUNT_SID',
+  'YOUR_AUTH_TOKEN',
+  config
 )
 
 # Get all monitored hosts
@@ -54,9 +72,9 @@ puts hosts
 result = client.rbl.check('8.8.8.8')
 puts result
 
-# Get all contacts
-contacts = client.contact.contacts.get
-puts contacts
+# Get all contacts with automatic pagination
+all_contacts = client.contact.contacts.get_all
+puts "Total contacts: #{all_contacts.length}"
 ```
 
 ## API Reference
@@ -64,7 +82,44 @@ puts contacts
 ### Client Initialization
 
 ```ruby
+# With default configuration
 client = GeneratorLabs::Client.new(account_sid, auth_token)
+
+# With custom configuration
+config = GeneratorLabs::Config.new(
+  timeout: 45,           # Request timeout in seconds (default: 30)
+  connect_timeout: 10,   # Connection timeout in seconds (default: 5)
+  max_retries: 5,        # Max retry attempts (default: 3)
+  retry_backoff: 2.0,    # Backoff multiplier (default: 1.0)
+  base_url: 'https://api.generatorlabs.com/4.0/'
+)
+client = GeneratorLabs::Client.new(account_sid, auth_token, config)
+```
+
+### Configuration Options
+
+- **timeout**: Maximum duration for the entire request in seconds (default: 30)
+- **connect_timeout**: Maximum duration for connection establishment in seconds (default: 5)
+- **max_retries**: Maximum number of retry attempts for failed requests (default: 3)
+- **retry_backoff**: Multiplier for exponential backoff between retries (default: 1.0)
+- **base_url**: Custom API base URL (default: https://api.generatorlabs.com/4.0/)
+
+### Pagination
+
+All list operations support automatic pagination using the `get_all` method:
+
+```ruby
+# Get all hosts across multiple pages
+all_hosts = client.rbl.hosts.get_all(page_size: 50)
+
+# Get all profiles with automatic pagination
+all_profiles = client.rbl.profiles.get_all
+
+# Get all contacts with automatic pagination
+all_contacts = client.contact.contacts.get_all
+
+# Get all groups with automatic pagination
+all_groups = client.contact.groups.get_all
 ```
 
 ### RBL Monitoring
@@ -182,11 +237,39 @@ end
 ## Retry Logic
 
 The SDK automatically retries failed requests with exponential backoff:
-- Maximum 3 retry attempts
+- Configurable maximum retry attempts (default: 3)
 - Retries on connection errors, 5xx server errors, and 429 rate limits
-- Exponential backoff delays: 1s, 2s, 4s
-- Connection timeout: 5 seconds
-- Request timeout: 30 seconds
+- Configurable exponential backoff multiplier (default: 1.0 for 1s, 2s, 4s delays)
+- Configurable connection timeout (default: 5 seconds)
+- Configurable request timeout (default: 30 seconds)
+
+Customize retry behavior via the `Config` class:
+
+```ruby
+config = GeneratorLabs::Config.new(
+  max_retries: 5,        # More retry attempts
+  retry_backoff: 2.0,    # Faster exponential growth
+  timeout: 60            # Longer timeout
+)
+client = GeneratorLabs::Client.new(account_sid, auth_token, config)
+```
+
+## Examples
+
+The `examples/` directory contains complete, runnable examples demonstrating:
+
+- **check_ip.rb**: Check if an IP is listed on any RBLs
+- **manage_hosts.rb**: Create, list, update, and delete monitored hosts
+- **pagination.rb**: Handle large result sets with automatic pagination
+- **error_handling.rb**: Proper error handling and custom configuration
+
+Run examples:
+
+```bash
+export GENERATOR_LABS_ACCOUNT_SID="your_account_sid"
+export GENERATOR_LABS_AUTH_TOKEN="your_auth_token"
+ruby examples/check_ip.rb
+```
 
 ## Requirements
 
@@ -198,6 +281,10 @@ The SDK automatically retries failed requests with exponential backoff:
 ```bash
 bundle exec rspec
 ```
+
+## Security
+
+For security best practices and vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
 ## License
 

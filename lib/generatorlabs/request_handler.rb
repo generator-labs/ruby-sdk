@@ -20,25 +20,25 @@ module GeneratorLabs
     #
     # @param account_sid [String] Account SID for authentication
     # @param auth_token [String] Auth token for authentication
-    # @param base_url [String] Base API URL
-    def initialize(account_sid, auth_token, base_url)
+    # @param config [Config] Configuration object
+    def initialize(account_sid, auth_token, config)
       @account_sid = account_sid
       @auth_token = auth_token
-      @base_url = base_url
+      @config = config
 
       # Create Faraday connection with retry middleware
-      @connection = Faraday.new(url: base_url) do |config|
-        config.request :url_encoded
-        config.request :retry,
-                       max: 3,
-                       interval: 1.0,
-                       backoff_factor: 2,
-                       retry_statuses: [429, 500, 502, 503, 504],
-                       methods: %i[get post put delete]
+      @connection = Faraday.new(url: config.base_url) do |faraday_config|
+        faraday_config.request :url_encoded
+        faraday_config.request :retry,
+                               max: config.max_retries,
+                               interval: 1.0,
+                               backoff_factor: config.retry_backoff,
+                               retry_statuses: [429, 500, 502, 503, 504],
+                               methods: %i[get post put delete]
 
-        config.adapter Faraday.default_adapter
-        config.options.timeout = 30
-        config.options.open_timeout = 5
+        faraday_config.adapter Faraday.default_adapter
+        faraday_config.options.timeout = config.timeout
+        faraday_config.options.open_timeout = config.connect_timeout
       end
     end
 
