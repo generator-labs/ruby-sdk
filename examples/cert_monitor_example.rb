@@ -7,8 +7,8 @@
 
 require 'generatorlabs'
 
-account_sid = ENV['GENERATOR_LABS_ACCOUNT_SID']
-auth_token = ENV['GENERATOR_LABS_AUTH_TOKEN']
+account_sid = ENV.fetch('GENERATOR_LABS_ACCOUNT_SID', nil)
+auth_token = ENV.fetch('GENERATOR_LABS_AUTH_TOKEN', nil)
 
 if account_sid.nil? || auth_token.nil?
   puts 'Error: Set GENERATOR_LABS_ACCOUNT_SID and GENERATOR_LABS_AUTH_TOKEN environment variables'
@@ -61,7 +61,7 @@ begin
 
   # Update profile
   puts "\n=== Updating profile ==="
-  updated_profile = client.cert.profiles.update(profile_id, expiration_warning_days: 45)
+  client.cert.profiles.update(profile_id, expiration_warning_days: 45)
   puts 'Updated profile warning days to 45'
 
   # ===================================================================
@@ -109,7 +109,7 @@ begin
 
   # Update monitor
   puts "\n=== Updating monitor ==="
-  updated_monitor = client.cert.monitors.update(https_monitor_id, name: 'Updated HTTPS Monitor Name')
+  client.cert.monitors.update(https_monitor_id, name: 'Updated HTTPS Monitor Name')
   puts 'Updated monitor name'
 
   # Pause monitoring
@@ -139,7 +139,6 @@ begin
   puts "Deleted profile ID: #{profile_id}"
 
   puts "\n=== Certificate Monitoring Example Complete ==="
-
 rescue GeneratorLabs::Error => e
   puts "API Error: #{e.message}"
   exit 1

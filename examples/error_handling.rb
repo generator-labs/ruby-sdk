@@ -5,8 +5,8 @@
 
 require 'generatorlabs'
 
-account_sid = ENV['GENERATOR_LABS_ACCOUNT_SID']
-auth_token = ENV['GENERATOR_LABS_AUTH_TOKEN']
+account_sid = ENV.fetch('GENERATOR_LABS_ACCOUNT_SID', nil)
+auth_token = ENV.fetch('GENERATOR_LABS_AUTH_TOKEN', nil)
 
 if account_sid.nil? || account_sid.empty? || auth_token.nil? || auth_token.empty?
   abort 'Error: Set GENERATOR_LABS_ACCOUNT_SID and GENERATOR_LABS_AUTH_TOKEN environment variables'
@@ -59,7 +59,7 @@ rescue GeneratorLabs::Error => e
   # Log error and continue with cached/default data
   puts "API error: #{e.message}"
   puts 'Using cached data due to API error'
-  hosts = { 'hosts' => [] }
+  { 'hosts' => [] }
 end
 
 puts "\nAll examples completed!"
