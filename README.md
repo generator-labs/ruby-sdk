@@ -77,6 +77,38 @@ all_contacts = client.contact.contacts.get_all
 puts "Total contacts: #{all_contacts.length}"
 ```
 
+## Webhook Verification
+
+The SDK includes a helper for verifying incoming webhook signatures. Each webhook is assigned a signing secret (available in the Portal), which is used to compute an HMAC-SHA256 signature sent with every request in the `X-Webhook-Signature` header.
+
+```ruby
+require 'generatorlabs'
+
+header = request.env['HTTP_X_WEBHOOK_SIGNATURE'] || ''
+body = request.body.read
+secret = ENV['GENERATOR_LABS_WEBHOOK_SECRET']
+
+begin
+  payload = GeneratorLabs::Webhook.verify(body, header, secret)
+
+  # payload is the decoded event data
+  puts payload['event']
+
+rescue GeneratorLabs::Error => e
+  # Signature verification failed
+  halt 403, { error: 'Invalid signature' }.to_json
+end
+```
+
+The default timestamp tolerance is 5 minutes. You can customize it (in seconds), or pass `0` to disable:
+
+```ruby
+payload = GeneratorLabs::Webhook.verify(body, header, secret, 600)  # 10-minute tolerance
+payload = GeneratorLabs::Webhook.verify(body, header, secret, 0)    # disable timestamp check
+```
+
+See `examples/webhook_verification.rb` for a complete example.
+
 ## API Reference
 
 ### Client Initialization
