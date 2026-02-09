@@ -63,7 +63,7 @@ module GeneratorLabs
 
         all_items.concat(errors)
 
-        break unless response['has_more'] && !errors.empty?
+        break unless page < (response['total_pages'] || 1) && !errors.empty?
 
         page += 1
       end
@@ -107,7 +107,7 @@ module GeneratorLabs
 
         all_items.concat(monitors)
 
-        break unless response['has_more'] && !monitors.empty?
+        break unless page < (response['total_pages'] || 1) && !monitors.empty?
 
         page += 1
       end
@@ -187,7 +187,7 @@ module GeneratorLabs
 
         all_items.concat(profiles)
 
-        break unless response['has_more'] && !profiles.empty?
+        break unless page < (response['total_pages'] || 1) && !profiles.empty?
 
         page += 1
       end

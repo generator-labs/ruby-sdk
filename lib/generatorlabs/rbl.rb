@@ -34,17 +34,38 @@ module GeneratorLabs
       @sources ||= RBLSources.new(@handler)
     end
 
-    # Check if an IP is listed on any RBLs
-    # @param ip [String] IP address to check
-    # @return [Hash] Check results
-    def check(ip)
-      @handler.get('rbl/check', { ip: ip })
+    # Access manual RBL check operations
+    # @return [RBLCheck]
+    def check
+      @check ||= RBLCheck.new(@handler)
     end
 
     # Get current RBL listings for monitored hosts
     # @return [Hash] Listing information
     def listings
       @handler.get('rbl/listings')
+    end
+  end
+
+  # Manual RBL check operations
+  class RBLCheck
+    def initialize(handler)
+      @handler = handler
+    end
+
+    # Start a manual RBL check
+    # @param params [Hash] Check parameters (host, callback, details)
+    # @return [Hash] Check result with check ID
+    def start(params)
+      @handler.post('rbl/check/start', params)
+    end
+
+    # Get the status of a manual RBL check
+    # @param id [String] Check ID
+    # @param params [Hash] Optional parameters (details)
+    # @return [Hash] Check status
+    def status(id, params = {})
+      @handler.get("rbl/check/status/#{id}", params)
     end
   end
 
@@ -83,7 +104,7 @@ module GeneratorLabs
 
         all_items.concat(hosts)
 
-        break unless response['has_more'] && !hosts.empty?
+        break unless page < (response['total_pages'] || 1) && !hosts.empty?
 
         page += 1
       end
@@ -111,6 +132,20 @@ module GeneratorLabs
     # @return [Hash] Deletion confirmation
     def delete(id)
       @handler.delete("rbl/hosts/#{id}")
+    end
+
+    # Pause monitoring for a host
+    # @param id [String, Integer] Host ID
+    # @return [Hash] Response
+    def pause(id)
+      @handler.post("rbl/hosts/#{id}/pause")
+    end
+
+    # Resume monitoring for a host
+    # @param id [String, Integer] Host ID
+    # @return [Hash] Response
+    def resume(id)
+      @handler.post("rbl/hosts/#{id}/resume")
     end
   end
 
@@ -149,7 +184,7 @@ module GeneratorLabs
 
         all_items.concat(profiles)
 
-        break unless response['has_more'] && !profiles.empty?
+        break unless page < (response['total_pages'] || 1) && !profiles.empty?
 
         page += 1
       end
@@ -215,7 +250,7 @@ module GeneratorLabs
 
         all_items.concat(sources)
 
-        break unless response['has_more'] && !sources.empty?
+        break unless page < (response['total_pages'] || 1) && !sources.empty?
 
         page += 1
       end
@@ -243,6 +278,20 @@ module GeneratorLabs
     # @return [Hash] Deletion confirmation
     def delete(id)
       @handler.delete("rbl/sources/#{id}")
+    end
+
+    # Pause an RBL source
+    # @param id [String, Integer] Source ID
+    # @return [Hash] Response
+    def pause(id)
+      @handler.post("rbl/sources/#{id}/pause")
+    end
+
+    # Resume an RBL source
+    # @param id [String, Integer] Source ID
+    # @return [Hash] Response
+    def resume(id)
+      @handler.post("rbl/sources/#{id}/resume")
     end
   end
 end

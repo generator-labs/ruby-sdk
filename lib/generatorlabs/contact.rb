@@ -64,7 +64,7 @@ module GeneratorLabs
 
         all_items.concat(contacts)
 
-        break unless response['has_more'] && !contacts.empty?
+        break unless page < (response['total_pages'] || 1) && !contacts.empty?
 
         page += 1
       end
@@ -92,6 +92,35 @@ module GeneratorLabs
     # @return [Hash] Deletion confirmation
     def delete(id)
       @handler.delete("contact/contacts/#{id}")
+    end
+
+    # Pause a contact
+    # @param id [String, Integer] Contact ID
+    # @return [Hash] Response
+    def pause(id)
+      @handler.post("contact/contacts/#{id}/pause")
+    end
+
+    # Resume a contact
+    # @param id [String, Integer] Contact ID
+    # @return [Hash] Response
+    def resume(id)
+      @handler.post("contact/contacts/#{id}/resume")
+    end
+
+    # Confirm a contact with an auth code
+    # @param id [String, Integer] Contact ID
+    # @param params [Hash] Confirmation parameters (authcode)
+    # @return [Hash] Response
+    def confirm(id, params)
+      @handler.post("contact/contacts/#{id}/confirm", params)
+    end
+
+    # Resend confirmation to a contact
+    # @param id [String, Integer] Contact ID
+    # @return [Hash] Response
+    def resend(id)
+      @handler.post("contact/contacts/#{id}/resend")
     end
   end
 
@@ -130,7 +159,7 @@ module GeneratorLabs
 
         all_items.concat(groups)
 
-        break unless response['has_more'] && !groups.empty?
+        break unless page < (response['total_pages'] || 1) && !groups.empty?
 
         page += 1
       end
