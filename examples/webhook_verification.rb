@@ -13,9 +13,7 @@ require 'json'
 # Store this securely (e.g., environment variable), never hard-code it.
 signing_secret = ENV.fetch('GENERATOR_LABS_WEBHOOK_SECRET', nil)
 
-if signing_secret.nil? || signing_secret.empty?
-  abort 'Error: Set GENERATOR_LABS_WEBHOOK_SECRET environment variable'
-end
+abort 'Error: Set GENERATOR_LABS_WEBHOOK_SECRET environment variable' if signing_secret.nil? || signing_secret.empty?
 
 #
 # Example 1: Basic verification

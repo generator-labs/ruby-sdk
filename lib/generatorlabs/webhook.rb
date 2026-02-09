@@ -45,26 +45,22 @@ module GeneratorLabs
       raise Error, 'Invalid X-Webhook-Signature header format.' unless parts.key?('t') && parts.key?('v1')
 
       # Check timestamp tolerance
-      if tolerance > 0 && (Time.now.to_i - parts['t'].to_i).abs > tolerance
-        raise Error, 'Webhook timestamp is outside the tolerance window.'
-      end
+      raise Error, 'Webhook timestamp is outside the tolerance window.' if tolerance.positive? && (Time.now.to_i - parts['t'].to_i).abs > tolerance
 
       # Compute and compare the signature
       expected = OpenSSL::HMAC.hexdigest('sha256', secret, "#{parts['t']}.#{body}")
 
-      unless secure_compare(expected, parts['v1'])
-        raise Error, 'Webhook signature verification failed.'
-      end
+      raise Error, 'Webhook signature verification failed.' unless secure_compare(expected, parts['v1'])
 
       # Decode and return the payload
       JSON.parse(body)
     end
 
     # Constant-time string comparison.
-    def self.secure_compare(a, b)
-      return false unless a.bytesize == b.bytesize
+    def self.secure_compare(left, right)
+      return false unless left.bytesize == right.bytesize
 
-      OpenSSL.fixed_length_secure_compare(a, b)
+      OpenSSL.fixed_length_secure_compare(left, right)
     end
 
     private_class_method :secure_compare
