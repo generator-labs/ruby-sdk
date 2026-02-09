@@ -45,7 +45,9 @@ module GeneratorLabs
       raise Error, 'Invalid X-Webhook-Signature header format.' unless parts.key?('t') && parts.key?('v1')
 
       # Check timestamp tolerance
-      raise Error, 'Webhook timestamp is outside the tolerance window.' if tolerance.positive? && (Time.now.to_i - parts['t'].to_i).abs > tolerance
+      if tolerance.positive? && (Time.now.to_i - parts['t'].to_i).abs > tolerance
+        raise Error, 'Webhook timestamp is outside the tolerance window.'
+      end
 
       # Compute and compare the signature
       expected = OpenSSL::HMAC.hexdigest('sha256', secret, "#{parts['t']}.#{body}")
