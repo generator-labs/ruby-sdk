@@ -2,10 +2,32 @@
 
 [![Gem Version](https://badge.fury.io/rb/generatorlabs.svg)](https://badge.fury.io/rb/generatorlabs)
 [![Tests](https://github.com/generator-labs/ruby-sdk/workflows/Tests/badge.svg)](https://github.com/generator-labs/ruby-sdk/actions)
-[![CodeQL](https://github.com/generator-labs/ruby-sdk/workflows/CodeQL/badge.svg)](https://github.com/generator-labs/ruby-sdk/actions?query=workflow%3ACodeQL)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Official Ruby SDK for the [Generator Labs API](https://generatorlabs.com). This library provides a simple and intuitive interface for interacting with the Generator Labs v4.0 API, including RBL monitoring, contact management, and more.
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Webhook Verification](#webhook-verification)
+- [API Reference](#api-reference)
+  - [Client Initialization](#client-initialization)
+  - [Configuration Options](#configuration-options)
+  - [Pagination](#pagination)
+  - [RBL Monitoring](#rbl-monitoring) - [Hosts](#hosts) | [Profiles](#profiles) | [Sources](#sources) | [Check & Listings](#check--listings)
+  - [Certificate Monitoring](#certificate-monitoring) - [Errors](#errors) | [Monitors](#monitors) | [Profiles](#profiles-1)
+  - [Contact Management](#contact-management) - [Contacts](#contacts) | [Groups](#groups)
+- [Error Handling](#error-handling)
+- [Retry Logic](#retry-logic)
+- [Examples](#examples)
+- [Requirements](#requirements)
+- [Testing](#testing)
+- [Security](#security)
+- [License](#license)
+- [Support](#support)
+- [Contributing](#contributing)
 
 ## Features
 
@@ -16,7 +38,6 @@ Official Ruby SDK for the [Generator Labs API](https://generatorlabs.com). This 
 - Connection pooling and timeout management
 - Clean, Ruby-idiomatic API
 - Comprehensive error handling
-- Security scanning with CodeQL and Dependabot
 - Ruby 3.0+ support
 
 ## Installation
@@ -68,8 +89,8 @@ client = GeneratorLabs::Client.new(
 hosts = client.rbl.hosts.get
 puts hosts
 
-# Check an IP address
-result = client.rbl.check('8.8.8.8')
+# Start a manual RBL check
+result = client.rbl.check.start(host: '8.8.8.8')
 puts result
 
 # Get all contacts with automatic pagination
@@ -163,22 +184,31 @@ all_groups = client.contact.groups.get_all
 hosts = client.rbl.hosts.get
 
 # Get a specific host
-host = client.rbl.hosts.get(123)
+host = client.rbl.hosts.get('HT1a2b3c4d5e6f7890abcdef1234567890')
 
 # Get multiple hosts
-hosts = client.rbl.hosts.get(123, 456, 789)
+hosts = client.rbl.hosts.get('HT1a2b3c4d5e6f7890abcdef1234567890', 'HT2b3c4d5e6f7890abcdef12345678901a')
 
 # Create a host
 host = client.rbl.hosts.create(
-  ip: '8.8.8.8',
-  description: 'Google DNS'
+  host: '8.8.8.8',
+  name: 'Google DNS',
+  profile: 'RP9f8e7d6c5b4a3210fedcba0987654321',
+  contact_group: [
+    'CG4f3e2d1c0b9a8776655443322110fedc',
+    'CG5a6b7c8d9e0f1234567890abcdef1234'
+  ],
+  tags: ['production', 'web']
 )
 
 # Update a host
-host = client.rbl.hosts.update(123, description: 'Updated description')
+host = client.rbl.hosts.update('HT1a2b3c4d5e6f7890abcdef1234567890',
+  name: 'Updated description',
+  tags: ['production', 'web']
+)
 
 # Delete a host
-result = client.rbl.hosts.delete(123)
+result = client.rbl.hosts.delete('HT1a2b3c4d5e6f7890abcdef1234567890')
 ```
 
 #### Profiles
@@ -188,9 +218,28 @@ result = client.rbl.hosts.delete(123)
 profiles = client.rbl.profiles.get
 
 # Get a specific profile
-profile = client.rbl.profiles.get(1)
+profile = client.rbl.profiles.get('RP9f8e7d6c5b4a3210fedcba0987654321')
 
-# Create/Update/Delete - similar to Hosts
+# Create a profile
+profile = client.rbl.profiles.create(
+  name: 'My Custom Profile',
+  entries: [
+    'RB1234567890abcdef1234567890abcdef',
+    'RB0987654321fedcba0987654321fedcba'
+  ]
+)
+
+# Update a profile
+profile = client.rbl.profiles.update('RP9f8e7d6c5b4a3210fedcba0987654321',
+  name: 'Updated Profile Name',
+  entries: [
+    'RB1234567890abcdef1234567890abcdef',
+    'RB0987654321fedcba0987654321fedcba'
+  ]
+)
+
+# Delete a profile
+result = client.rbl.profiles.delete('RP9f8e7d6c5b4a3210fedcba0987654321')
 ```
 
 #### Sources
@@ -200,16 +249,33 @@ profile = client.rbl.profiles.get(1)
 sources = client.rbl.sources.get
 
 # Get a specific source
-source = client.rbl.sources.get(10)
+source = client.rbl.sources.get('RB18c470cc518a09678bb280960dbdd524')
 
-# Create/Update/Delete - similar to Hosts
+# Create a custom source
+source = client.rbl.sources.create(
+  host: 'custom.rbl.example.com',
+  type: 'rbl',
+  custom_codes: ['127.0.0.2', '127.0.0.3']
+)
+
+# Update a source
+source = client.rbl.sources.update('RB18c470cc518a09678bb280960dbdd524',
+  host: 'updated.rbl.example.com',
+  custom_codes: ['127.0.0.2', '127.0.0.3']
+)
+
+# Delete a source
+result = client.rbl.sources.delete('RB18c470cc518a09678bb280960dbdd524')
 ```
 
 #### Check & Listings
 
 ```ruby
-# Check an IP address
-result = client.rbl.check('8.8.8.8')
+# Start a manual RBL check
+result = client.rbl.check.start(host: '8.8.8.8')
+
+# Get check status
+status = client.rbl.check.status('check_id')
 
 # Get current listings
 listings = client.rbl.listings
@@ -224,9 +290,6 @@ Certificate monitoring allows you to monitor SSL/TLS certificates for expiration
 ```ruby
 # Get all certificate errors
 errors = client.cert.errors.get
-
-# Get a specific error
-error = client.cert.errors.get('CE5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a')
 ```
 
 #### Monitors
@@ -242,14 +305,20 @@ monitor = client.cert.monitors.get('CM62944aeeee2b46d7a28221164f38976a')
 monitor = client.cert.monitors.create(
   name: 'Production Web Server',
   hostname: 'example.com',
-  port: 443,
   protocol: 'https',
-  cert_profile: 'CP79b597e61a984a35b5eb7dcdbc3de53c',
-  contact_group: 'CG4f3e2d1c0b9a8776655443322110fed'
+  profile: 'CP79b597e61a984a35b5eb7dcdbc3de53c',
+  contact_group: [
+    'CG4f3e2d1c0b9a8776655443322110fedc',
+    'CG5a6b7c8d9e0f1234567890abcdef1234'
+  ],
+  tags: ['production', 'web', 'ssl']
 )
 
 # Update a monitor
-monitor = client.cert.monitors.update('CM62944aeeee2b46d7a28221164f38976a', name: 'Updated Server Name')
+monitor = client.cert.monitors.update('CM62944aeeee2b46d7a28221164f38976a',
+  name: 'Updated Server Name',
+  tags: ['production', 'web', 'ssl']
+)
 
 # Delete a monitor
 result = client.cert.monitors.delete('CM62944aeeee2b46d7a28221164f38976a')
@@ -273,12 +342,19 @@ profile = client.cert.profiles.get('CP79b597e61a984a35b5eb7dcdbc3de53c')
 # Create a profile
 profile = client.cert.profiles.create(
   name: 'Standard Certificate Profile',
-  expiration_warning_days: 30,
-  expiration_critical_days: 7
+  expiration_thresholds: [30, 14, 7],
+  alert_on_expiration: true,
+  alert_on_name_mismatch: true,
+  alert_on_misconfigurations: true,
+  alert_on_changes: true
 )
 
 # Update a profile
-profile = client.cert.profiles.update('CP79b597e61a984a35b5eb7dcdbc3de53c', expiration_warning_days: 45)
+profile = client.cert.profiles.update('CP79b597e61a984a35b5eb7dcdbc3de53c',
+  expiration_thresholds: [45, 14, 7],
+  alert_on_misconfigurations: true,
+  alert_on_changes: true
+)
 
 # Delete a profile
 result = client.cert.profiles.delete('CP79b597e61a984a35b5eb7dcdbc3de53c')
@@ -293,22 +369,33 @@ result = client.cert.profiles.delete('CP79b597e61a984a35b5eb7dcdbc3de53c')
 contacts = client.contact.contacts.get
 
 # Get a specific contact
-contact = client.contact.contacts.get(456)
+contact = client.contact.contacts.get('COabcdef1234567890abcdef1234567890')
 
 # Get multiple contacts
-contacts = client.contact.contacts.get(456, 789)
+contacts = client.contact.contacts.get('COabcdef1234567890abcdef1234567890', 'CO1234567890abcdef1234567890abcdef')
 
 # Create a contact
 contact = client.contact.contacts.create(
-  email: 'user@example.com',
-  name: 'John Doe'
+  contact: 'user@example.com',
+  type: 'email',
+  schedule: 'every_check',
+  contact_group: [
+    'CG4f3e2d1c0b9a8776655443322110fedc',
+    'CG5a6b7c8d9e0f1234567890abcdef1234'
+  ]
 )
 
 # Update a contact
-contact = client.contact.contacts.update(456, name: 'Jane Doe')
+contact = client.contact.contacts.update('COabcdef1234567890abcdef1234567890',
+  contact: 'updated@example.com',
+  contact_group: [
+    'CG4f3e2d1c0b9a8776655443322110fedc',
+    'CG5a6b7c8d9e0f1234567890abcdef1234'
+  ]
+)
 
 # Delete a contact
-result = client.contact.contacts.delete(456)
+result = client.contact.contacts.delete('COabcdef1234567890abcdef1234567890')
 ```
 
 #### Groups
@@ -318,9 +405,20 @@ result = client.contact.contacts.delete(456)
 groups = client.contact.groups.get
 
 # Get a specific group
-group = client.contact.groups.get(10)
+group = client.contact.groups.get('CG4f3e2d1c0b9a8776655443322110fedc')
 
-# Create/Update/Delete - similar to Contacts
+# Create a group
+group = client.contact.groups.create(
+  name: 'Primary Contacts'
+)
+
+# Update a group
+group = client.contact.groups.update('CG4f3e2d1c0b9a8776655443322110fedc',
+  name: 'Updated Group Name'
+)
+
+# Delete a group
+result = client.contact.groups.delete('CG4f3e2d1c0b9a8776655443322110fedc')
 ```
 
 ## Error Handling
