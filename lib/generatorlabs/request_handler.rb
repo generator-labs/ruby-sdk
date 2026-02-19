@@ -40,6 +40,7 @@ module GeneratorLabs
       # Create Faraday connection with retry middleware
       @connection = Faraday.new(url: config.base_url) do |faraday_config|
         faraday_config.request :url_encoded
+        faraday_config.request :authorization, :basic, account_sid, auth_token
         faraday_config.request :retry,
                                max: config.max_retries,
                                interval: 1.0,
@@ -143,12 +144,15 @@ module GeneratorLabs
     def make_request(method, path, params)
       url = "#{path}.json"
 
+      # Convert array values to comma-separated strings for form encoding
+      if params
+        params = params.transform_values { |v| v.is_a?(Array) ? v.join(',') : v }
+      end
+
       response = @connection.send(method) do |req|
         req.url url
         req.headers['User-Agent'] = "GeneratorLabs-Ruby/#{VERSION}"
         req.headers['Accept'] = 'application/json'
-        req.basic_auth(@account_sid, @auth_token)
-
         if method == :get && params
           req.params = params
         elsif %i[post put delete].include?(method) && params
