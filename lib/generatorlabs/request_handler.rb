@@ -143,33 +143,47 @@ module GeneratorLabs
     # @raise [Error] if request fails or response is invalid
     def make_request(method, path, params)
       url = "#{path}.json"
-
-      # Convert array values to comma-separated strings for form encoding
-      if params
-        params = params.transform_values { |v| v.is_a?(Array) ? v.join(',') : v }
-      end
+      params = convert_params(params)
 
       response = @connection.send(method) do |req|
         req.url url
         req.headers['User-Agent'] = "GeneratorLabs-Ruby/#{VERSION}"
         req.headers['Accept'] = 'application/json'
-        if method == :get && params
-          req.params = params
-        elsif %i[post put delete].include?(method) && params
-          req.body = params
-        end
+        apply_params(req, method, params)
       end
 
-      # Parse JSON response
+      parse_response(response)
+    rescue Faraday::Error => e
+      raise Error, "API request failed: #{e.message}"
+    end
+
+    # Convert array values to comma-separated strings for form encoding.
+    def convert_params(params)
+      return unless params
+
+      params.transform_values { |v| v.is_a?(Array) ? v.join(',') : v }
+    end
+
+    # Apply parameters to request based on HTTP method.
+    def apply_params(req, method, params)
+      return unless params
+
+      if method == :get
+        req.params = params
+      else
+        req.body = params
+      end
+    end
+
+    # Parse JSON response and check for errors.
+    def parse_response(response)
       data = JSON.parse(response.body)
 
-      # Check for API error in v4.0 format
       if data.is_a?(Hash) && data['success'] == false
         error_msg = data.dig('error', 'message') || data['message'] || 'Unknown error'
         raise Error, "API error: #{error_msg}"
       end
 
-      # Check HTTP status code
       if response.status >= 400
         error_msg = data.dig('error', 'message') || data['message'] || "HTTP #{response.status} error"
         raise Error, "API error: #{error_msg}"
@@ -178,8 +192,6 @@ module GeneratorLabs
       data
     rescue JSON::ParserError => e
       raise Error, "Failed to parse JSON response: #{e.message}"
-    rescue Faraday::Error => e
-      raise Error, "API request failed: #{e.message}"
     end
   end
 end
