@@ -41,6 +41,8 @@ module GeneratorLabs
       @connection = Faraday.new(url: config.base_url) do |faraday_config|
         faraday_config.request :url_encoded
         faraday_config.request :authorization, :basic, account_sid, auth_token
+        # Retry with exponential backoff; faraday-retry respects Retry-After
+        # headers automatically on rate limit (429) responses
         faraday_config.request :retry,
                                max: config.max_retries,
                                interval: 1.0,
@@ -61,7 +63,7 @@ module GeneratorLabs
     #
     # @param path [String] API endpoint path (e.g., 'rbl/hosts')
     # @param params [Hash, nil] Query parameters (e.g., {status: 'active'})
-    # @return [Hash] Parsed JSON response
+    # @return [Response] Response wrapper with parsed data and rate limit info
     # @raise [Error] if request fails after all retries
     #
     # @example
@@ -77,7 +79,7 @@ module GeneratorLabs
     #
     # @param path [String] API endpoint path (e.g., 'rbl/hosts')
     # @param params [Hash, nil] Request parameters (e.g., {name: 'My Host', host: '1.2.3.4'})
-    # @return [Hash] Parsed JSON response
+    # @return [Response] Response wrapper with parsed data and rate limit info
     # @raise [Error] if request fails after all retries
     #
     # @example
@@ -93,7 +95,7 @@ module GeneratorLabs
     #
     # @param path [String] API endpoint path (e.g., 'rbl/hosts/HTxxxxxxxx')
     # @param params [Hash, nil] Request parameters (e.g., {name: 'Updated Name'})
-    # @return [Hash] Parsed JSON response
+    # @return [Response] Response wrapper with parsed data and rate limit info
     # @raise [Error] if request fails after all retries
     #
     # @example
@@ -108,7 +110,7 @@ module GeneratorLabs
     # automatic retry logic for failures.
     #
     # @param path [String] API endpoint path (e.g., 'rbl/hosts/HTxxxxxxxx')
-    # @return [Hash] Parsed JSON response
+    # @return [Response] Response wrapper with parsed data and rate limit info
     # @raise [Error] if request fails after all retries
     #
     # @example
@@ -139,7 +141,7 @@ module GeneratorLabs
     # @param method [Symbol] HTTP method (:get, :post, :put, :delete)
     # @param path [String] API endpoint path
     # @param params [Hash, nil] Request parameters
-    # @return [Hash] Parsed JSON response
+    # @return [Response] Response wrapper with parsed data and rate limit info
     # @raise [Error] if request fails or response is invalid
     def make_request(method, path, params)
       url = "#{path}.json"
@@ -152,7 +154,21 @@ module GeneratorLabs
         apply_params(req, method, params)
       end
 
-      parse_response(response)
+      data = parse_response(response)
+
+      #
+      # parse rate limit headers
+      #
+      rate_limit_info = nil
+      if response.headers['ratelimit-limit']
+        rate_limit_info = RateLimitInfo.new(
+          limit: response.headers['ratelimit-limit'],
+          remaining: response.headers['ratelimit-remaining'].to_i,
+          reset: response.headers['ratelimit-reset'].to_i
+        )
+      end
+
+      Response.new(data, rate_limit_info)
     rescue Faraday::Error => e
       raise Error, "API request failed: #{e.message}"
     end

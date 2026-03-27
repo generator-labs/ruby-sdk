@@ -21,10 +21,12 @@ Official Ruby SDK for the [Generator Labs API](https://generatorlabs.com). This 
   - [Contact Management](#contact-management) - [Contacts](#contacts) | [Groups](#groups)
 - [Error Handling](#error-handling)
 - [Retry Logic](#retry-logic)
+- [Rate Limiting](#rate-limiting)
 - [Examples](#examples)
 - [Requirements](#requirements)
 - [Testing](#testing)
 - [Security](#security)
+- [Release History](#release-history)
 - [License](#license)
 - [Support](#support)
 - [Contributing](#contributing)
@@ -438,6 +440,7 @@ end
 The SDK automatically retries failed requests with exponential backoff:
 - Configurable maximum retry attempts (default: 3)
 - Retries on connection errors, 5xx server errors, and 429 rate limits
+- Respects `Retry-After` header on 429 responses before falling back to exponential backoff
 - Configurable exponential backoff multiplier (default: 1.0 for 1s, 2s, 4s delays)
 - Configurable connection timeout (default: 5 seconds)
 - Configurable request timeout (default: 30 seconds)
@@ -451,6 +454,36 @@ config = GeneratorLabs::Config.new(
   timeout: 60            # Longer timeout
 )
 client = GeneratorLabs::Client.new(account_sid, auth_token, config)
+```
+
+## Rate Limiting
+
+The API enforces two layers of rate limiting:
+
+- **Hourly limit**: 1,000 requests per hour per application
+- **Per-second limit**: varies by endpoint — 100 RPS for read operations, 50 RPS for write operations, and 20 RPS for manual check start
+
+When a rate limit is exceeded, the API returns HTTP 429 with a `Retry-After` header indicating how many seconds to wait. The SDK automatically respects this header during retries.
+
+All API responses include IETF draft rate limit headers, accessible via the `rate_limit_info` attribute on every response:
+
+| Header | Description | Example |
+|--------|-------------|---------|
+| `RateLimit-Limit` | Active rate limit policies | `1000;w=3600, 100;w=1` |
+| `RateLimit-Remaining` | Requests remaining in the most restrictive window | `95` |
+| `RateLimit-Reset` | Seconds until the most restrictive window resets | `1` |
+
+```ruby
+response = client.rbl.hosts.get
+
+# Access response data (bracket notation works as before)
+hosts = response['data']
+
+# Access rate limit info
+if response.rate_limit_info
+  puts "Remaining: #{response.rate_limit_info.remaining}"
+  puts "Reset: #{response.rate_limit_info.reset}s"
+end
 ```
 
 ## Examples
@@ -484,6 +517,19 @@ bundle exec rspec
 ## Security
 
 For security best practices and vulnerability reporting, see [SECURITY.md](SECURITY.md).
+
+## Release History
+
+### v2.0.0 (2026-01-31)
+* Complete rewrite for Generator Labs API v4.0
+* RESTful endpoint design with proper HTTP verbs
+* Updated to use Generator Labs branding (formerly RBLTracker)
+* Automatic `Retry-After` header support on 429 rate limit responses
+* `Response` wrapper (Hash-like) exposes per-request rate limit info (`rate_limit_info`)
+* Added `RateLimitInfo` class with `limit`, `remaining`, and `reset` attributes
+* Automatic retry with exponential backoff on 429 and 5xx errors
+* Webhook signature verification with HMAC-SHA256 and constant-time comparison
+* Automatic pagination via `get_all` for large result sets
 
 ## License
 
