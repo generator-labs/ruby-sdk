@@ -520,6 +520,10 @@ For security best practices and vulnerability reporting, see [SECURITY.md](SECUR
 
 ## Release History
 
+### v2.0.1 (2026-06-19)
+* Error detection now reads the API `status_code` and `status_message`; any `status_code` (or HTTP status) of 400 or greater raises `Error` with the API message
+* `Error` now exposes a `status_code` reader
+
 ### v2.0.0 (2026-01-31)
 * Complete rewrite for Generator Labs API v4.0
 * RESTful endpoint design with proper HTTP verbs
