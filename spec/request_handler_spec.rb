@@ -77,4 +77,26 @@ RSpec.describe GeneratorLabs::RequestHandler do
         ))
     end
   end
+
+  describe 'error responses' do
+    [
+      [400, 'Invalid host id provided.'],
+      [404, 'Not found.'],
+      [422, 'Validation failed.']
+    ].each do |status, message|
+      it "raises Error with the status_message and status_code on #{status}" do
+        stub_request(:get, 'https://api.generatorlabs.com/4.0/rbl/hosts/HT11111111111111111111111111111111.json')
+          .to_return(
+            status: status,
+            headers: { 'Content-Type' => 'application/json' },
+            body: { status_code: status, status_message: message }.to_json
+          )
+
+        expect { handler.get('rbl/hosts/HT11111111111111111111111111111111') }
+          .to raise_error(GeneratorLabs::Error, /#{Regexp.escape(message)}/) do |error|
+            expect(error.status_code).to eq(status)
+          end
+      end
+    end
+  end
 end

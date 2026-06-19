@@ -22,5 +22,12 @@ require_relative 'generatorlabs/cert'
 
 # Generator Labs API SDK
 module GeneratorLabs
-  class Error < StandardError; end
+  class Error < StandardError
+    attr_reader :status_code
+
+    def initialize(message = nil, status_code: nil)
+      super(message)
+      @status_code = status_code
+    end
+  end
 end

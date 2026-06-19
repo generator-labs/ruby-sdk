@@ -56,7 +56,7 @@ RSpec.describe GeneratorLabs::Client do
 
   describe 'version' do
     it 'has the correct version' do
-      expect(GeneratorLabs::VERSION).to eq('2.0.0')
+      expect(GeneratorLabs::VERSION).to eq('2.0.1')
     end
   end
 end

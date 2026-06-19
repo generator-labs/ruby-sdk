@@ -195,14 +195,10 @@ module GeneratorLabs
     def parse_response(response)
       data = JSON.parse(response.body)
 
-      if data.is_a?(Hash) && data['success'] == false
-        error_msg = data.dig('error', 'message') || data['message'] || 'Unknown error'
-        raise Error, "API error: #{error_msg}"
-      end
-
-      if response.status >= 400
-        error_msg = data.dig('error', 'message') || data['message'] || "HTTP #{response.status} error"
-        raise Error, "API error: #{error_msg}"
+      code = (data.is_a?(Hash) && data['status_code']) || response.status
+      if code.to_i >= 400 || response.status >= 400
+        error_msg = (data.is_a?(Hash) && data['status_message']) || "HTTP #{response.status} error"
+        raise Error.new("API error: #{error_msg}", status_code: code.to_i)
       end
 
       data
