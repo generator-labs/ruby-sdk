@@ -22,6 +22,7 @@ require_relative 'generatorlabs/cert'
 
 # Generator Labs API SDK
 module GeneratorLabs
+  # Error raised for all Generator Labs API failures, carrying the API status_code.
   class Error < StandardError
     attr_reader :status_code
 
