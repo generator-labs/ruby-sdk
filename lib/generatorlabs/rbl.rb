@@ -41,9 +41,11 @@ module GeneratorLabs
     end
 
     # Get current RBL listings for monitored hosts
+    # @param params [Hash, nil] Optional parameters (page, page_size)
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Listing information
-    def listings
-      @handler.get('rbl/listings')
+    def listings(params = nil, options = nil)
+      @handler.get('rbl/listings', params, options)
     end
   end
 
@@ -55,17 +57,19 @@ module GeneratorLabs
 
     # Start a manual RBL check
     # @param params [Hash] Check parameters (host, callback, details)
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Check result with check ID
-    def start(params)
-      @handler.post('rbl/check/start', params)
+    def start(params, options = nil)
+      @handler.post('rbl/check/start', params, options, idempotent: true)
     end
 
     # Get the status of a manual RBL check
     # @param id [String] Check ID
     # @param params [Hash] Optional parameters (details)
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Check status
-    def status(id, params = {})
-      @handler.get("rbl/check/status/#{id}", params)
+    def status(id, params = {}, options = nil)
+      @handler.get("rbl/check/status/#{id}", params, options)
     end
   end
 
@@ -75,18 +79,11 @@ module GeneratorLabs
       @handler = handler
     end
 
-    # Get hosts (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
+    # Get hosts (all, or one by ID)
+    # @param args [String, Hash, RequestOptions] Optional ID or parameters, then request options
     # @return [Hash] Host data
-    def get(*ids)
-      return @handler.get('rbl/hosts') if ids.empty?
-
-      # Check if first argument is a hash (parameters)
-      return @handler.get('rbl/hosts', ids.first) if ids.first.is_a?(Hash)
-
-      return @handler.get("rbl/hosts/#{ids.first}") if ids.length == 1
-
-      @handler.get('rbl/hosts', { ids: ids.join(',') })
+    def get(*args)
+      @handler.get(*GeneratorLabs.get_args('rbl/hosts', args))
     end
 
     # Get all hosts with automatic pagination
@@ -100,7 +97,7 @@ module GeneratorLabs
       loop do
         params[:page] = page
         response = get(params)
-        hosts = response['hosts'] || []
+        hosts = response['data'] || []
 
         all_items.concat(hosts)
 
@@ -114,38 +111,43 @@ module GeneratorLabs
 
     # Create a new monitored host
     # @param params [Hash] Host parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Created host data
-    def create(params)
-      @handler.post('rbl/hosts', params)
+    def create(params, options = nil)
+      @handler.post('rbl/hosts', params, options, idempotent: true)
     end
 
     # Update a monitored host
     # @param id [String, Integer] Host ID
     # @param params [Hash] Updated parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Updated host data
-    def update(id, params)
-      @handler.put("rbl/hosts/#{id}", params)
+    def update(id, params, options = nil)
+      @handler.put("rbl/hosts/#{id}", params, options)
     end
 
     # Delete a monitored host
     # @param id [String, Integer] Host ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Deletion confirmation
-    def delete(id)
-      @handler.delete("rbl/hosts/#{id}")
+    def delete(id, options = nil)
+      @handler.delete("rbl/hosts/#{id}", options)
     end
 
     # Pause monitoring for a host
     # @param id [String, Integer] Host ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Response
-    def pause(id)
-      @handler.post("rbl/hosts/#{id}/pause")
+    def pause(id, options = nil)
+      @handler.post("rbl/hosts/#{id}/pause", nil, options)
     end
 
     # Resume monitoring for a host
     # @param id [String, Integer] Host ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Response
-    def resume(id)
-      @handler.post("rbl/hosts/#{id}/resume")
+    def resume(id, options = nil)
+      @handler.post("rbl/hosts/#{id}/resume", nil, options)
     end
   end
 
@@ -155,18 +157,11 @@ module GeneratorLabs
       @handler = handler
     end
 
-    # Get profiles (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
+    # Get profiles (all, or one by ID)
+    # @param args [String, Hash, RequestOptions] Optional ID or parameters, then request options
     # @return [Hash] Profile data
-    def get(*ids)
-      return @handler.get('rbl/profiles') if ids.empty?
-
-      # Check if first argument is a hash (parameters)
-      return @handler.get('rbl/profiles', ids.first) if ids.first.is_a?(Hash)
-
-      return @handler.get("rbl/profiles/#{ids.first}") if ids.length == 1
-
-      @handler.get('rbl/profiles', { ids: ids.join(',') })
+    def get(*args)
+      @handler.get(*GeneratorLabs.get_args('rbl/profiles', args))
     end
 
     # Get all profiles with automatic pagination
@@ -180,7 +175,7 @@ module GeneratorLabs
       loop do
         params[:page] = page
         response = get(params)
-        profiles = response['profiles'] || []
+        profiles = response['data'] || []
 
         all_items.concat(profiles)
 
@@ -194,24 +189,27 @@ module GeneratorLabs
 
     # Create a new monitoring profile
     # @param params [Hash] Profile parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Created profile data
-    def create(params)
-      @handler.post('rbl/profiles', params)
+    def create(params, options = nil)
+      @handler.post('rbl/profiles', params, options, idempotent: true)
     end
 
     # Update a monitoring profile
     # @param id [String, Integer] Profile ID
     # @param params [Hash] Updated parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Updated profile data
-    def update(id, params)
-      @handler.put("rbl/profiles/#{id}", params)
+    def update(id, params, options = nil)
+      @handler.put("rbl/profiles/#{id}", params, options)
     end
 
     # Delete a monitoring profile
     # @param id [String, Integer] Profile ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Deletion confirmation
-    def delete(id)
-      @handler.delete("rbl/profiles/#{id}")
+    def delete(id, options = nil)
+      @handler.delete("rbl/profiles/#{id}", options)
     end
   end
 
@@ -221,18 +219,11 @@ module GeneratorLabs
       @handler = handler
     end
 
-    # Get sources (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
+    # Get sources (all, or one by ID)
+    # @param args [String, Hash, RequestOptions] Optional ID or parameters, then request options
     # @return [Hash] Source data
-    def get(*ids)
-      return @handler.get('rbl/sources') if ids.empty?
-
-      # Check if first argument is a hash (parameters)
-      return @handler.get('rbl/sources', ids.first) if ids.first.is_a?(Hash)
-
-      return @handler.get("rbl/sources/#{ids.first}") if ids.length == 1
-
-      @handler.get('rbl/sources', { ids: ids.join(',') })
+    def get(*args)
+      @handler.get(*GeneratorLabs.get_args('rbl/sources', args))
     end
 
     # Get all sources with automatic pagination
@@ -246,7 +237,7 @@ module GeneratorLabs
       loop do
         params[:page] = page
         response = get(params)
-        sources = response['sources'] || []
+        sources = response['data'] || []
 
         all_items.concat(sources)
 
@@ -260,38 +251,43 @@ module GeneratorLabs
 
     # Create a new RBL source
     # @param params [Hash] Source parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Created source data
-    def create(params)
-      @handler.post('rbl/sources', params)
+    def create(params, options = nil)
+      @handler.post('rbl/sources', params, options, idempotent: true)
     end
 
     # Update an RBL source
     # @param id [String, Integer] Source ID
     # @param params [Hash] Updated parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Updated source data
-    def update(id, params)
-      @handler.put("rbl/sources/#{id}", params)
+    def update(id, params, options = nil)
+      @handler.put("rbl/sources/#{id}", params, options)
     end
 
     # Delete an RBL source
     # @param id [String, Integer] Source ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Deletion confirmation
-    def delete(id)
-      @handler.delete("rbl/sources/#{id}")
+    def delete(id, options = nil)
+      @handler.delete("rbl/sources/#{id}", options)
     end
 
     # Pause an RBL source
     # @param id [String, Integer] Source ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Response
-    def pause(id)
-      @handler.post("rbl/sources/#{id}/pause")
+    def pause(id, options = nil)
+      @handler.post("rbl/sources/#{id}/pause", nil, options)
     end
 
     # Resume an RBL source
     # @param id [String, Integer] Source ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Response
-    def resume(id)
-      @handler.post("rbl/sources/#{id}/resume")
+    def resume(id, options = nil)
+      @handler.post("rbl/sources/#{id}/resume", nil, options)
     end
   end
 end

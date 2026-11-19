@@ -5,6 +5,34 @@ All notable changes to the Generator Labs Ruby SDK will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0]
+
+### Added
+- `client.account`: `get`, `balance`, `usage`, `pause_checks` and `resume_checks`.
+- `client.cert.findings`: `get`, `get_all`, `dismiss` and `restore`.
+- `client.cert.monitors.check(id)` queues a check now, and `client.cert.errors.count` returns the
+  number of current certificate errors.
+- Request options as the last argument of every method, in a `GeneratorLabs::RequestOptions`:
+  `idempotency_key`, `request_id`, `if_none_match` and `fields`.
+- An `Idempotency-Key` is sent automatically on requests that create something or start a check
+  (creates, contact resend and confirm, certificate monitor delete, RBL check start, certificate
+  check now). It is generated once per call and reused on every retry, so a retried request is not
+  applied twice. A key you pass yourself is used instead.
+- `Response` exposes `request_id`, `etag`, `replayed` and `not_modified`, and `Error` carries the
+  `request_id`. A 304 answer to `if_none_match` is a normal response with `not_modified` set.
+- `client.rbl.listings` accepts query parameters, for paging.
+
+### Changed
+- A `Retry-After` longer than 60 seconds (`GeneratorLabs::MAX_RETRY_AFTER`) is not waited out: the
+  429 is raised as the error.
+- `get` takes a single ID. The form with several IDs is removed and raises `ArgumentError`: it
+  sent an `ids` parameter the API does not have.
+
+### Fixed
+- `get_all` returned an empty list for every resource: it read the wrong key of the response.
+- A retry no longer waits for the `RateLimit-Reset` time, which is on every response and can be
+  the hourly reset. Only `Retry-After` sets the wait.
+
 ## [2.0.1]
 
 ### Changed

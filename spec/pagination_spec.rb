@@ -27,7 +27,7 @@ RSpec.describe 'Pagination' do
     it 'returns all items from a single page' do
       allow(handler).to receive(:get)
         .with('rbl/hosts', hash_including(page: 1))
-        .and_return(paginated_response(make_hosts(3), key: 'hosts', page: 1, total_pages: 1, total: 3))
+        .and_return(paginated_response(make_hosts(3), key: 'data', page: 1, total_pages: 1, total: 3))
 
       result = hosts_resource.get_all
 
@@ -40,19 +40,19 @@ RSpec.describe 'Pagination' do
       allow(handler).to receive(:get)
         .with('rbl/hosts', hash_including(page: 1))
         .and_return(paginated_response(
-                      make_hosts(2, 0), key: 'hosts', page: 1, total_pages: 3, total: 5, page_size: 2
+                      make_hosts(2, 0), key: 'data', page: 1, total_pages: 3, total: 5, page_size: 2
                     ))
 
       allow(handler).to receive(:get)
         .with('rbl/hosts', hash_including(page: 2))
         .and_return(paginated_response(
-                      make_hosts(2, 2), key: 'hosts', page: 2, total_pages: 3, total: 5, page_size: 2
+                      make_hosts(2, 2), key: 'data', page: 2, total_pages: 3, total: 5, page_size: 2
                     ))
 
       allow(handler).to receive(:get)
         .with('rbl/hosts', hash_including(page: 3))
         .and_return(paginated_response(
-                      make_hosts(1, 4), key: 'hosts', page: 3, total_pages: 3, total: 5, page_size: 2
+                      make_hosts(1, 4), key: 'data', page: 3, total_pages: 3, total: 5, page_size: 2
                     ))
 
       result = hosts_resource.get_all(page_size: 2)
@@ -65,7 +65,7 @@ RSpec.describe 'Pagination' do
     it 'returns empty array for empty response' do
       allow(handler).to receive(:get)
         .with('rbl/hosts', hash_including(page: 1))
-        .and_return(paginated_response([], key: 'hosts', page: 1, total_pages: 1, total: 0))
+        .and_return(paginated_response([], key: 'data', page: 1, total_pages: 1, total: 0))
 
       result = hosts_resource.get_all
 
@@ -76,7 +76,7 @@ RSpec.describe 'Pagination' do
       allow(handler).to receive(:get)
         .with('rbl/hosts', hash_including(page: 1, page_size: 50))
         .and_return(paginated_response(
-                      [{ 'name' => 'host_1' }], key: 'hosts', page: 1, total_pages: 1, total: 1, page_size: 50
+                      [{ 'name' => 'host_1' }], key: 'data', page: 1, total_pages: 1, total: 1, page_size: 50
                     ))
 
       result = hosts_resource.get_all(page_size: 50)
@@ -95,14 +95,14 @@ RSpec.describe 'Pagination' do
         .with('contact/contacts', hash_including(page: 1))
         .and_return(paginated_response(
                       [{ 'name' => 'contact_1' }, { 'name' => 'contact_2' }],
-                      key: 'contacts', page: 1, total_pages: 2, total: 3, page_size: 2
+                      key: 'data', page: 1, total_pages: 2, total: 3, page_size: 2
                     ))
 
       allow(handler).to receive(:get)
         .with('contact/contacts', hash_including(page: 2))
         .and_return(paginated_response(
                       [{ 'name' => 'contact_3' }],
-                      key: 'contacts', page: 2, total_pages: 2, total: 3, page_size: 2
+                      key: 'data', page: 2, total_pages: 2, total: 3, page_size: 2
                     ))
 
       result = contacts_resource.get_all(page_size: 2)

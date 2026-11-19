@@ -13,9 +13,11 @@ require_relative 'generatorlabs/version'
 require_relative 'generatorlabs/config'
 require_relative 'generatorlabs/rate_limit_info'
 require_relative 'generatorlabs/response'
+require_relative 'generatorlabs/request_options'
 require_relative 'generatorlabs/client'
 require_relative 'generatorlabs/request_handler'
 require_relative 'generatorlabs/webhook'
+require_relative 'generatorlabs/account'
 require_relative 'generatorlabs/rbl'
 require_relative 'generatorlabs/contact'
 require_relative 'generatorlabs/cert'
@@ -26,9 +28,13 @@ module GeneratorLabs
   class Error < StandardError
     attr_reader :status_code
 
-    def initialize(message = nil, status_code: nil)
+    # @return [String, nil] The X-Request-Id of the failed request; quote it when contacting support
+    attr_reader :request_id
+
+    def initialize(message = nil, status_code: nil, request_id: nil)
       super(message)
       @status_code = status_code
+      @request_id = request_id
     end
   end
 end

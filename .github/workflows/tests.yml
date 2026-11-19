@@ -15,10 +15,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby-version: ['3.0', '3.1', '3.2', '3.3']
+        ruby-version: ['3.3', '3.4', '4.0']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Ruby ${{ matrix.ruby-version }}
         uses: ruby/setup-ruby@v1
@@ -30,7 +30,7 @@ jobs:
         run: bundle exec rspec
 
       - name: Run RuboCop
-        if: matrix.ruby-version == '3.2'
+        if: matrix.ruby-version == '3.4'
         run: bundle exec rubocop
 
   build:
@@ -38,12 +38,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '3.4'
           bundler-cache: true
 
       - name: Build gem

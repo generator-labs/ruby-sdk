@@ -16,8 +16,10 @@ Official Ruby SDK for the [Generator Labs API](https://generatorlabs.com). This 
   - [Client Initialization](#client-initialization)
   - [Configuration Options](#configuration-options)
   - [Pagination](#pagination)
+  - [Request Options](#request-options)
+  - [Account](#account)
   - [RBL Monitoring](#rbl-monitoring) - [Hosts](#hosts) | [Profiles](#profiles) | [Sources](#sources) | [Check & Listings](#check--listings)
-  - [Certificate Monitoring](#certificate-monitoring) - [Errors](#errors) | [Monitors](#monitors) | [Profiles](#profiles-1)
+  - [Certificate Monitoring](#certificate-monitoring) - [Errors](#errors) | [Monitors](#monitors) | [Findings](#findings) | [Profiles](#profiles-1)
   - [Contact Management](#contact-management) - [Contacts](#contacts) | [Groups](#groups)
 - [Error Handling](#error-handling)
 - [Retry Logic](#retry-logic)
@@ -177,6 +179,68 @@ all_contacts = client.contact.contacts.get_all
 all_groups = client.contact.groups.get_all
 ```
 
+### Request Options
+
+Every resource method takes a `GeneratorLabs::RequestOptions` as its last argument: `idempotency_key`, `request_id`, `if_none_match` and `fields`.
+
+**Idempotency keys.** Requests that create something (`create`), a contact `resend` or `confirm`, the certificate monitor `delete`, and the two check requests (`rbl.check.start`, `cert.monitors.check`) are sent with an `Idempotency-Key` header. The SDK generates one key per call and sends the same key on every automatic retry of that call, so a retry after a timeout never creates, sends, bills or deletes anything twice. Pass your own key to make a repeat of the call from your code safe as well:
+
+```ruby
+options = GeneratorLabs::RequestOptions.new(idempotency_key: 'b0e1f6a2-4d7c-4b43-9d3c-3f1c5a9f2e11')
+host = client.rbl.hosts.create({ name: 'My Mail Server', host: '192.168.1.100' }, options)
+
+# true when the API answered with the result of an earlier request with the same key
+puts host.replayed
+```
+
+The same key with a different request is refused with a 422.
+
+**Request IDs.** Every response carries an `X-Request-Id`, available as `request_id` on the response and on `GeneratorLabs::Error`. Quote it when you contact support about a request. You can also send your own (1 to 64 letters, digits, `-`, `_`, `.` or `:`):
+
+```ruby
+begin
+  hosts = client.rbl.hosts.get(GeneratorLabs::RequestOptions.new(request_id: 'my-request-1'))
+  puts hosts.request_id
+rescue GeneratorLabs::Error => e
+  puts "#{e.status_code} #{e.request_id}"
+end
+```
+
+**Conditional requests.** Every `GET` response carries an `ETag`. Send it back as `if_none_match`: when nothing has changed the API answers `304 Not Modified`, and the response has `not_modified` set and no data.
+
+```ruby
+hosts = client.rbl.hosts.get
+
+later = client.rbl.hosts.get(GeneratorLabs::RequestOptions.new(if_none_match: hosts.etag))
+hosts = later unless later.not_modified
+```
+
+**Field selection.** Any `GET` takes `fields` (an Array, or a comma-separated String) to keep only those keys in each object of `data`. A nested key is written with a dot. A field no object has is refused with a 422.
+
+```ruby
+options = GeneratorLabs::RequestOptions.new(fields: %w[id host listed])
+
+host = client.rbl.hosts.get('HT1a2b3c4d5e6f7890abcdef1234567890', options)
+hosts = client.rbl.hosts.get({ page_size: 50 }, options)
+```
+
+### Account
+
+```ruby
+# The account: balance, whether scheduled checks are running, and plan usage
+account = client.account.get
+
+# The account balance, as a Float
+balance = client.account.balance
+
+# Usage by month, for the last 3 months
+usage = client.account.usage(months: 3)
+
+# Pause and resume the account's scheduled checks
+client.account.pause_checks
+client.account.resume_checks
+```
+
 ### RBL Monitoring
 
 #### Hosts
@@ -187,9 +251,6 @@ hosts = client.rbl.hosts.get
 
 # Get a specific host
 host = client.rbl.hosts.get('HT1a2b3c4d5e6f7890abcdef1234567890')
-
-# Get multiple hosts
-hosts = client.rbl.hosts.get('HT1a2b3c4d5e6f7890abcdef1234567890', 'HT2b3c4d5e6f7890abcdef12345678901a')
 
 # Create a host
 host = client.rbl.hosts.create(
@@ -281,6 +342,9 @@ status = client.rbl.check.status('check_id')
 
 # Get current listings
 listings = client.rbl.listings
+
+# Get the second page of listings
+listings = client.rbl.listings(page: 2)
 ```
 
 ### Certificate Monitoring
@@ -292,6 +356,11 @@ Certificate monitoring allows you to monitor SSL/TLS certificates for expiration
 ```ruby
 # Get all certificate errors
 errors = client.cert.errors.get
+```
+
+```ruby
+# The number of current certificate warnings and errors
+count = client.cert.errors.count
 ```
 
 #### Monitors
@@ -330,6 +399,30 @@ result = client.cert.monitors.pause('CM62944aeeee2b46d7a28221164f38976a')
 
 # Resume monitoring
 result = client.cert.monitors.resume('CM62944aeeee2b46d7a28221164f38976a')
+
+# Queue a check now, instead of waiting for the next scheduled check
+result = client.cert.monitors.check('CM62944aeeee2b46d7a28221164f38976a')
+```
+
+#### Findings
+
+Findings are everything the last check of each active monitor found: errors, warnings and notices, whatever the profile's alert settings. Some findings can be dismissed, and restored later.
+
+```ruby
+# List the current findings, one entry per monitor
+findings = client.cert.findings.get
+
+# Include the findings dismissed from each monitor
+findings = client.cert.findings.get(dismissed: 1)
+
+# Dismiss findings on named monitors (leave monitors out for every monitor that has them)
+result = client.cert.findings.dismiss(
+  finding_id: %w[CERT_CAA01 CERT_CAA02],
+  monitors: ['CM62944aeeee2b46d7a28221164f38976a']
+)
+
+# Restore dismissed findings
+result = client.cert.findings.restore(finding_id: 'CERT_CAA01')
 ```
 
 #### Profiles
@@ -372,9 +465,6 @@ contacts = client.contact.contacts.get
 
 # Get a specific contact
 contact = client.contact.contacts.get('COabcdef1234567890abcdef1234567890')
-
-# Get multiple contacts
-contacts = client.contact.contacts.get('COabcdef1234567890abcdef1234567890', 'CO1234567890abcdef1234567890abcdef')
 
 # Create a contact
 contact = client.contact.contacts.create(
@@ -441,6 +531,7 @@ The SDK automatically retries failed requests with exponential backoff:
 - Configurable maximum retry attempts (default: 3)
 - Retries on connection errors, 5xx server errors, and 429 rate limits
 - Respects `Retry-After` header on 429 responses before falling back to exponential backoff
+- A `Retry-After` longer than 60 seconds is not waited out: the 429 is raised as the error instead
 - Configurable exponential backoff multiplier (default: 1.0 for 1s, 2s, 4s delays)
 - Configurable connection timeout (default: 5 seconds)
 - Configurable request timeout (default: 30 seconds)
@@ -519,6 +610,16 @@ bundle exec rspec
 For security best practices and vulnerability reporting, see [SECURITY.md](SECURITY.md).
 
 ## Release History
+
+### v2.1.0 (2026-11-19)
+* Added `client.account` (account, balance, usage, pause and resume scheduled checks)
+* Added `client.cert.findings` (list, dismiss, restore), `client.cert.monitors.check` and `client.cert.errors.count`
+* Added request options (`GeneratorLabs::RequestOptions`): `idempotency_key`, `request_id`, `if_none_match` and `fields`
+* Automatic `Idempotency-Key` on requests that create something or start a check, reused on every retry
+* `Response` exposes `request_id`, `etag`, `replayed` and `not_modified`; `Error` carries the `request_id`
+* A `Retry-After` longer than 60 seconds is raised as the error, not waited out
+* Fixed `get_all` returning an empty list, and retries waiting for the `RateLimit-Reset` time
+* `get` takes a single ID; the form with several IDs is removed
 
 ### v2.0.1 (2026-06-19)
 * Error detection now reads the API `status_code` and `status_message`; any `status_code` (or HTTP status) of 400 or greater raises `Error` with the API message

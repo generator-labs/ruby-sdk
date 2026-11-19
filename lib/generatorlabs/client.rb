@@ -76,6 +76,12 @@ module GeneratorLabs
       @handler = RequestHandler.new(account_sid, auth_token, @config)
     end
 
+    # Access the account, its balance, its usage and its scheduled checks
+    # @return [Account]
+    def account
+      @account ||= Account.new(@handler)
+    end
+
     # Get the RBL monitoring API namespace.
     #
     # The RBL namespace provides access to:

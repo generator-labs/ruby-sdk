@@ -18,11 +18,32 @@ module GeneratorLabs
     # @return [RateLimitInfo, nil] Rate limit information from response headers
     attr_reader :rate_limit_info
 
+    # @return [String, nil] The X-Request-Id of the response; quote it when contacting support
+    attr_reader :request_id
+
+    # @return [String, nil] The ETag of a GET response, to send back as if_none_match
+    attr_reader :etag
+
+    # @return [Boolean] true when the API answered with the result of an earlier request
+    #   that carried the same Idempotency-Key
+    attr_reader :replayed
+
+    # @return [Boolean] true for a 304 Not Modified answer to if_none_match (no data)
+    attr_reader :not_modified
+
     # @param data [Hash] Parsed JSON response body
     # @param rate_limit_info [RateLimitInfo, nil] Rate limit information
-    def initialize(data, rate_limit_info = nil)
+    # @param request_id [String, nil] X-Request-Id of the response
+    # @param etag [String, nil] ETag of the response
+    # @param replayed [Boolean] Whether the answer is a replay of an earlier request
+    # @param not_modified [Boolean] Whether the answer is 304 Not Modified
+    def initialize(data, rate_limit_info = nil, request_id: nil, etag: nil, replayed: false, not_modified: false) # rubocop:disable Metrics/ParameterLists
       @data = data
       @rate_limit_info = rate_limit_info
+      @request_id = request_id
+      @etag = etag
+      @replayed = replayed
+      @not_modified = not_modified
     end
 
     # Access response data by key (Hash-like access).

@@ -35,18 +35,11 @@ module GeneratorLabs
       @handler = handler
     end
 
-    # Get contacts (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
+    # Get contacts (all, or one by ID)
+    # @param args [String, Hash, RequestOptions] Optional ID or parameters, then request options
     # @return [Hash] Contact data
-    def get(*ids)
-      return @handler.get('contact/contacts') if ids.empty?
-
-      # Check if first argument is a hash (parameters)
-      return @handler.get('contact/contacts', ids.first) if ids.first.is_a?(Hash)
-
-      return @handler.get("contact/contacts/#{ids.first}") if ids.length == 1
-
-      @handler.get('contact/contacts', { ids: ids.join(',') })
+    def get(*args)
+      @handler.get(*GeneratorLabs.get_args('contact/contacts', args))
     end
 
     # Get all contacts with automatic pagination
@@ -60,7 +53,7 @@ module GeneratorLabs
       loop do
         params[:page] = page
         response = get(params)
-        contacts = response['contacts'] || []
+        contacts = response['data'] || []
 
         all_items.concat(contacts)
 
@@ -74,53 +67,60 @@ module GeneratorLabs
 
     # Create a new contact
     # @param params [Hash] Contact parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Created contact data
-    def create(params)
-      @handler.post('contact/contacts', params)
+    def create(params, options = nil)
+      @handler.post('contact/contacts', params, options, idempotent: true)
     end
 
     # Update a contact
     # @param id [String, Integer] Contact ID
     # @param params [Hash] Updated parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Updated contact data
-    def update(id, params)
-      @handler.put("contact/contacts/#{id}", params)
+    def update(id, params, options = nil)
+      @handler.put("contact/contacts/#{id}", params, options)
     end
 
     # Delete a contact
     # @param id [String, Integer] Contact ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Deletion confirmation
-    def delete(id)
-      @handler.delete("contact/contacts/#{id}")
+    def delete(id, options = nil)
+      @handler.delete("contact/contacts/#{id}", options)
     end
 
     # Pause a contact
     # @param id [String, Integer] Contact ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Response
-    def pause(id)
-      @handler.post("contact/contacts/#{id}/pause")
+    def pause(id, options = nil)
+      @handler.post("contact/contacts/#{id}/pause", nil, options)
     end
 
     # Resume a contact
     # @param id [String, Integer] Contact ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Response
-    def resume(id)
-      @handler.post("contact/contacts/#{id}/resume")
+    def resume(id, options = nil)
+      @handler.post("contact/contacts/#{id}/resume", nil, options)
     end
 
     # Confirm a contact with an auth code
     # @param id [String, Integer] Contact ID
     # @param params [Hash] Confirmation parameters (authcode)
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Response
-    def confirm(id, params)
-      @handler.post("contact/contacts/#{id}/confirm", params)
+    def confirm(id, params, options = nil)
+      @handler.post("contact/contacts/#{id}/confirm", params, options, idempotent: true)
     end
 
     # Resend confirmation to a contact
     # @param id [String, Integer] Contact ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Response
-    def resend(id)
-      @handler.post("contact/contacts/#{id}/resend")
+    def resend(id, options = nil)
+      @handler.post("contact/contacts/#{id}/resend", nil, options, idempotent: true)
     end
   end
 
@@ -130,18 +130,11 @@ module GeneratorLabs
       @handler = handler
     end
 
-    # Get groups (all, by ID, or by array of IDs)
-    # @param ids [nil, String, Integer, Hash, Array] Optional ID(s) or parameters
+    # Get groups (all, or one by ID)
+    # @param args [String, Hash, RequestOptions] Optional ID or parameters, then request options
     # @return [Hash] Group data
-    def get(*ids)
-      return @handler.get('contact/groups') if ids.empty?
-
-      # Check if first argument is a hash (parameters)
-      return @handler.get('contact/groups', ids.first) if ids.first.is_a?(Hash)
-
-      return @handler.get("contact/groups/#{ids.first}") if ids.length == 1
-
-      @handler.get('contact/groups', { ids: ids.join(',') })
+    def get(*args)
+      @handler.get(*GeneratorLabs.get_args('contact/groups', args))
     end
 
     # Get all groups with automatic pagination
@@ -155,7 +148,7 @@ module GeneratorLabs
       loop do
         params[:page] = page
         response = get(params)
-        groups = response['groups'] || []
+        groups = response['data'] || []
 
         all_items.concat(groups)
 
@@ -169,24 +162,27 @@ module GeneratorLabs
 
     # Create a new contact group
     # @param params [Hash] Group parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Created group data
-    def create(params)
-      @handler.post('contact/groups', params)
+    def create(params, options = nil)
+      @handler.post('contact/groups', params, options, idempotent: true)
     end
 
     # Update a contact group
     # @param id [String, Integer] Group ID
     # @param params [Hash] Updated parameters
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Updated group data
-    def update(id, params)
-      @handler.put("contact/groups/#{id}", params)
+    def update(id, params, options = nil)
+      @handler.put("contact/groups/#{id}", params, options)
     end
 
     # Delete a contact group
     # @param id [String, Integer] Group ID
+    # @param options [RequestOptions, nil] Request options
     # @return [Hash] Deletion confirmation
-    def delete(id)
-      @handler.delete("contact/groups/#{id}")
+    def delete(id, options = nil)
+      @handler.delete("contact/groups/#{id}", options)
     end
   end
 end
